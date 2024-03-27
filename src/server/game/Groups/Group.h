@@ -260,6 +260,8 @@ public:
     void SetGroupMemberFlag(ObjectGuid guid, bool apply, GroupMemberFlags flag);
     void RemoveUniqueGroupMemberFlag(GroupMemberFlags flag);
 
+    ObjectGuid const GetTargetIcon(uint8 id) const { return m_targetIcons[id]; }
+
     Difficulty GetDifficulty(bool isRaid) const;
     Difficulty GetDungeonDifficulty() const;
     Difficulty GetRaidDifficulty() const;

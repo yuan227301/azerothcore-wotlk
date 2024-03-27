@@ -59,20 +59,6 @@
 #include "WorldPacket.h"
 #include "WorldSession.h"
 
-class LoginQueryHolder : public CharacterDatabaseQueryHolder
-{
-private:
-    uint32 m_accountId;
-    ObjectGuid m_guid;
-public:
-    LoginQueryHolder(uint32 accountId, ObjectGuid guid)
-        : m_accountId(accountId), m_guid(guid) { }
-
-    ObjectGuid GetGuid() const { return m_guid; }
-    uint32 GetAccountId() const { return m_accountId; }
-    bool Initialize();
-};
-
 bool LoginQueryHolder::Initialize()
 {
     SetSize(MAX_PLAYER_LOGIN_QUERY);
@@ -902,8 +888,8 @@ void WorldSession::HandlePlayerLoginFromDB(LoginQueryHolder const& holder)
     CharacterDatabase.Execute(stmt);
 
     LoginDatabasePreparedStatement* loginStmt = LoginDatabase.GetPreparedStatement(LOGIN_UPD_ACCOUNT_ONLINE);
-    loginStmt->SetData(0, realm.Id.Realm);
-    loginStmt->SetData(1, GetAccountId());
+    // loginStmt->SetData(0, realm.Id.Realm);
+    loginStmt->SetData(0, GetAccountId());
     LoginDatabase.Execute(loginStmt);
 
     pCurrChar->SetInGameTime(GameTime::GetGameTimeMS().count());

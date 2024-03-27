@@ -102,7 +102,7 @@ bool WorldSessionFilter::Process(WorldPacket* packet)
 
 /// WorldSession constructor
 WorldSession::WorldSession(uint32 id, std::string&& name, std::shared_ptr<WorldSocket> sock, AccountTypes sec, uint8 expansion,
-    time_t mute_time, LocaleConstant locale, uint32 recruiter, bool isARecruiter, bool skipQueue, uint32 TotalTime) :
+    time_t mute_time, LocaleConstant locale, uint32 recruiter, bool isARecruiter, bool skipQueue, uint32 TotalTime, bool isBot) :
     m_muteTime(mute_time),
     m_timeOutTime(0),
     _lastAuctionListItemsMSTime(0),
@@ -134,7 +134,8 @@ WorldSession::WorldSession(uint32 id, std::string&& name, std::shared_ptr<WorldS
     _addonMessageReceiveCount(0),
     _timeSyncClockDeltaQueue(6),
     _timeSyncClockDelta(0),
-    _pendingTimeSyncRequests()
+    _pendingTimeSyncRequests(),
+    _isBot(isBot)
 {
     memset(m_Tutorials, 0, sizeof(m_Tutorials));
 
@@ -149,6 +150,10 @@ WorldSession::WorldSession(uint32 id, std::string&& name, std::shared_ptr<WorldS
         m_Address = sock->GetRemoteIpAddress().to_string();
         ResetTimeOutTime(false);
         LoginDatabase.Execute("UPDATE account SET online = 1 WHERE id = {};", GetAccountId()); // One-time query
+    }
+    else if (isBot)
+    {
+        m_Address = "127.0.0.1";
     }
 }
 
@@ -211,6 +216,8 @@ ObjectGuid::LowType WorldSession::GetGuidLow() const
 /// Send a packet to the client
 void WorldSession::SendPacket(WorldPacket const* packet)
 {
+    sScriptMgr->OnPlayerbotPacketSent(GetPlayer(), packet);
+    
     if (!m_Socket)
         return;
 
@@ -346,6 +353,7 @@ bool WorldSession::Update(uint32 diff, PacketFilter& updater)
 
                         opHandle->Call(this, *packet);
                         LogUnprocessedTail(packet);
+                        sScriptMgr->OnPacketReceived(this, *packet);
                     }
                     else
                         processedPackets = MAX_PROCESSED_PACKETS_IN_SAME_WORLDSESSION_UPDATE;   // break out of packet processing loop
@@ -367,6 +375,8 @@ bool WorldSession::Update(uint32 diff, PacketFilter& updater)
 
                     opHandle->Call(this, *packet);
                     LogUnprocessedTail(packet);
+
+                    sScriptMgr->OnPacketReceived(this, *packet);
                 }
                 else
                     processedPackets = MAX_PROCESSED_PACKETS_IN_SAME_WORLDSESSION_UPDATE;   // break out of packet processing loop
@@ -381,6 +391,8 @@ bool WorldSession::Update(uint32 diff, PacketFilter& updater)
 
                     opHandle->Call(this, *packet);
                     LogUnprocessedTail(packet);
+
+                    sScriptMgr->OnPacketReceived(this, *packet);
                 }
                 else
                     processedPackets = MAX_PROCESSED_PACKETS_IN_SAME_WORLDSESSION_UPDATE;   // break out of packet processing loop
@@ -403,6 +415,8 @@ bool WorldSession::Update(uint32 diff, PacketFilter& updater)
 
                     opHandle->Call(this, *packet);
                     LogUnprocessedTail(packet);
+
+                    sScriptMgr->OnPacketReceived(this, *packet);
                 }
                 else
                     processedPackets = MAX_PROCESSED_PACKETS_IN_SAME_WORLDSESSION_UPDATE;   // break out of packet processing loop
@@ -493,6 +507,8 @@ bool WorldSession::Update(uint32 diff, PacketFilter& updater)
     //logout procedure should happen only in World::UpdateSessions() method!!!
     if (updater.ProcessUnsafe())
     {
+        sScriptMgr->OnPlayerbotUpdateSessions(GetPlayer());
+
         if (m_Socket && m_Socket->IsOpen() && _warden)
         {
             _warden->Update(diff);
@@ -584,6 +600,8 @@ void WorldSession::LogoutPlayer(bool save)
 
         if (ObjectGuid lguid = _player->GetLootGUID())
             DoLootRelease(lguid);
+
+        sScriptMgr->OnPlayerbotLogout(_player);
 
         ///- If the player just died before logging out, make him appear as a ghost
         //FIXME: logout must be delayed in case lost connection with client in time of combat
@@ -711,6 +729,10 @@ void WorldSession::LogoutPlayer(bool save)
 
         LOG_INFO("entities.player", "Account: {} (IP: {}) Logout Character:[{}] ({}) Level: {}",
             GetAccountId(), GetRemoteAddress(), _player->GetName(), _player->GetGUID().ToString(), _player->GetLevel());
+
+        uint32 statementIndex = CHAR_UPD_ACCOUNT_ONLINE;
+        uint32 statementParam = GetAccountId();
+        sScriptMgr->OnDatabaseSelectIndexLogout(_player, statementIndex, statementParam);
 
         //! Remove the player from the world
         // the player may not be in the world when logging out
@@ -1722,4 +1744,9 @@ void WorldSession::InitializeSessionCallback(CharacterDatabaseQueryHolder const&
     SendAddonsInfo();
     SendClientCacheVersion(clientCacheVersion);
     SendTutorialsData();
+}
+
+LockedQueue<WorldPacket*>& WorldSession::GetPacketQueue()
+{
+    return _recvQueue;
 }

@@ -1331,6 +1331,12 @@ void Guild::HandleSetEmblem(WorldSession* session, const EmblemInfo& emblemInfo)
     }
 }
 
+void Guild::HandleSetEmblem(EmblemInfo const& emblemInfo)
+{
+    m_emblemInfo = emblemInfo;
+    m_emblemInfo.SaveToDB(m_id);
+}
+
 void Guild::HandleSetLeader(WorldSession* session, std::string_view name)
 {
     Player* player = session->GetPlayer();
@@ -1397,6 +1403,29 @@ void Guild::HandleSetRankInfo(WorldSession* session, uint8 rankId, std::string_v
         _BroadcastEvent(GE_RANK_UPDATED, ObjectGuid::Empty, std::to_string(rankId), rankInfo->GetName(), std::to_string(m_ranks.size()));
 
         LOG_DEBUG("guild", "Changed RankName to '{}', rights to 0x{:08X}", rankInfo->GetName(), rights);
+    }
+}
+
+void Guild::HandleSetRankInfo(uint8 rankId, uint32 rights, std::string_view name, uint32 moneyPerDay)
+{
+    if (RankInfo* rankInfo = GetRankInfo(rankId))
+    {
+        if (!name.empty())
+        {
+            rankInfo->SetName(name);
+        }
+
+        if (rights > 0)
+        {
+            rankInfo->SetRights(rights);
+        }
+
+        if (moneyPerDay > 0)
+        {
+            _SetRankBankMoneyPerDay(rankId, moneyPerDay);
+        }
+
+        _BroadcastEvent(GE_RANK_UPDATED, ObjectGuid::Empty, std::to_string(rankId), rankInfo->GetName(), std::to_string(m_ranks.size()));
     }
 }
 
@@ -2929,4 +2958,36 @@ void Guild::ResetTimes()
         member.ResetValues();
 
     _BroadcastEvent(GE_BANK_TAB_AND_MONEY_UPDATED, ObjectGuid::Empty);
+}
+
+bool Guild::MemberHasTabRights(ObjectGuid guid, uint8 tabId, uint32 rights) const
+{
+    if (const Member* member = GetMember(guid))
+    {
+        // Leader always has full rights
+        if (member->IsRank(GR_GUILDMASTER) || m_leaderGuid == guid)
+            return true;
+        return (_GetRankBankTabRights(member->GetRankId(), tabId) & rights) == rights;
+    }
+    return false;
+}
+
+bool Guild::HasRankRight(Player* player, uint32 right) const
+{
+    if (player)
+    {
+        if (Member const* member = GetMember(player->GetGUID()))
+        {
+            return (GetRankRights(member->GetRankId()) & right) != GR_RIGHT_EMPTY;
+        }
+    }
+
+    return false;
+}
+
+uint32 Guild::GetRankRights(uint8 rankId) const
+{
+    if (const RankInfo* rankInfo = GetRankInfo(rankId))
+        return rankInfo->GetRights();
+    return 0;
 }
