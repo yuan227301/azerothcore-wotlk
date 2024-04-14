@@ -300,6 +300,8 @@ public:
     bool CountRollVote(ObjectGuid playerGUID, ObjectGuid Guid, uint8 Choise);
     void EndRoll(Loot* loot, Map* allowedMap);
 
+    Rolls GetRolls() const { return RollId; }
+
     // related to disenchant rolls
     void ResetMaxEnchantingLevel();
 

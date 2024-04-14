@@ -700,7 +700,7 @@ public:
     void HandleQuery(WorldSession* session);
     void HandleSetMOTD(WorldSession* session, std::string_view motd);
     void HandleSetInfo(WorldSession* session, std::string_view info);
-    void HandleSetEmblem(WorldSession* session, const EmblemInfo& emblemInfo);
+    void HandleSetEmblem(WorldSession* session, EmblemInfo const& emblemInfo);
     void HandleSetEmblem(EmblemInfo const& emblemInfo);
     void HandleSetLeader(WorldSession* session, std::string_view name);
     void HandleSetBankTabInfo(WorldSession* session, uint8 tabId, std::string_view name, std::string_view icon);
@@ -813,13 +813,6 @@ private:
     inline uint8 _GetRanksSize() const { return uint8(m_ranks.size()); }
     inline const RankInfo* GetRankInfo(uint8 rankId) const { return rankId < _GetRanksSize() ? &m_ranks[rankId] : nullptr; }
     inline RankInfo* GetRankInfo(uint8 rankId) { return rankId < _GetRanksSize() ? &m_ranks[rankId] : nullptr; }
-    inline bool _HasRankRight(Player* player, uint32 right) const
-    {
-        if (player)
-            if (Member const* member = GetMember(player->GetGUID()))
-                return (_GetRankRights(member->GetRankId()) & right) != GR_RIGHT_EMPTY;
-        return false;
-    }
 
     inline uint8 _GetLowestRankId() const { return uint8(m_ranks.size() - 1); }
 
@@ -850,7 +843,6 @@ private:
     void _SetRankBankMoneyPerDay(uint8 rankId, uint32 moneyPerDay);
     void _SetRankBankTabRightsAndSlots(uint8 rankId, GuildBankRightsAndSlots rightsAndSlots, bool saveToDB = true);
     int8 _GetRankBankTabRights(uint8 rankId, uint8 tabId) const;
-    uint32 _GetRankRights(uint8 rankId) const;
     int32 _GetRankBankMoneyPerDay(uint8 rankId) const;
     int32 _GetRankBankTabSlotsPerDay(uint8 rankId, uint8 tabId) const;
     std::string _GetRankName(uint8 rankId) const;
@@ -858,7 +850,6 @@ private:
     int32 _GetMemberRemainingSlots(Member const& member, uint8 tabId) const;
     int32 _GetMemberRemainingMoney(Member const& member) const;
     void _UpdateMemberWithdrawSlots(CharacterDatabaseTransaction trans, ObjectGuid guid, uint8 tabId);
-    bool _MemberHasTabRights(ObjectGuid guid, uint8 tabId, uint32 rights) const;
 
     void _LogEvent(GuildEventLogTypes eventType, ObjectGuid playerGuid1, ObjectGuid playerGuid2 = ObjectGuid::Empty, uint8 newRank = 0);
     void _LogBankEvent(CharacterDatabaseTransaction trans, GuildBankEventLogTypes eventType, uint8 tabId, ObjectGuid playerGuid, uint32 itemOrMoney, uint16 itemStackCount = 0, uint8 destTabId = 0);

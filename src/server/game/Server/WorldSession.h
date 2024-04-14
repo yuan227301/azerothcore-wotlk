@@ -41,7 +41,6 @@ class Creature;
 class GameObject;
 class InstanceSave;
 class Item;
-// class LoginQueryHolder;
 class LoadPetFromDBQueryHolder;
 class Object;
 class Pet;
@@ -228,16 +227,16 @@ enum CharterTypes
 
 class LoginQueryHolder : public CharacterDatabaseQueryHolder
 {
-private:
-    uint32 m_accountId;
-    ObjectGuid m_guid;
-public:
-    LoginQueryHolder(uint32 accountId, ObjectGuid guid)
-        : m_accountId(accountId), m_guid(guid) { }
+    private:
+        uint32 m_accountId;
+        ObjectGuid m_guid;
 
-    ObjectGuid GetGuid() const { return m_guid; }
-    uint32 GetAccountId() const { return m_accountId; }
-    bool Initialize();
+    public:
+        LoginQueryHolder(uint32 accountId, ObjectGuid guid);
+
+        ObjectGuid GetGuid() const { return m_guid; }
+        uint32 GetAccountId() const { return m_accountId; }
+        bool Initialize();
 };
 
 //class to deal with packet processing
@@ -517,8 +516,8 @@ public:
     time_t m_muteTime;
 
     // Locales
-    LocaleConstant GetSessionDbcLocale() const { return m_sessionDbcLocale; }
-    LocaleConstant GetSessionDbLocaleIndex() const { return m_sessionDbLocaleIndex; }
+    LocaleConstant GetSessionDbcLocale() const { return _isBot? LOCALE_enUS : m_sessionDbcLocale; }
+    LocaleConstant GetSessionDbLocaleIndex() const { return _isBot? LOCALE_enUS : m_sessionDbLocaleIndex; }
     char const* GetAcoreString(uint32 entry) const;
 
     uint32 GetLatency() const { return m_latency; }
@@ -555,6 +554,7 @@ public:
     // Time Synchronisation
     void ResetTimeSync();
     void SendTimeSync();
+
 public:                                                 // opcodes handlers
     void Handle_NULL(WorldPacket& null);                // not used
     void Handle_EarlyProccess(WorldPacket& recvPacket); // just mark packets processed in WorldSocket::OnRead
@@ -1092,6 +1092,8 @@ public:                                                 // opcodes handlers
     void SetKicked(bool val) { _kicked = val; }
     bool IsSocketClosed() const;
 
+    void SetAddress(std::string const& address) { m_Address = address; }
+
     /*
      * CALLBACKS
      */
@@ -1104,10 +1106,12 @@ public:                                                 // opcodes handlers
     void InitializeSessionCallback(CharacterDatabaseQueryHolder const& realmHolder, uint32 clientCacheVersion);
 
     LockedQueue<WorldPacket*>& GetPacketQueue();
+
     [[nodiscard]] bool IsBot() const
     {
         return _isBot;
     }
+
 private:
     void ProcessQueryCallbacks();
 

@@ -7077,7 +7077,6 @@ void Player::SaveToDB(bool create, bool logout)
 
 void Player::SaveToDB(CharacterDatabaseTransaction trans, bool create, bool logout)
 {
-    LOG_TRACE("Player", "Player::SaveToDB");
     // delay auto save at any saves (manual, in code, or autosave)
     m_nextSave = sWorld->getIntConfig(CONFIG_INTERVAL_SAVE);
 

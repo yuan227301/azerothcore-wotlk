@@ -2626,7 +2626,7 @@ void Map::SendObjectUpdates()
             iter->second.Clear();
             continue;
         }
-        
+
         iter->second.BuildPacket(&packet);
         iter->first->GetSession()->SendPacket(&packet);
         packet.clear();                                     // clean the string

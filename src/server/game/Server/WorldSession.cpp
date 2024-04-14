@@ -153,7 +153,7 @@ WorldSession::WorldSession(uint32 id, std::string&& name, std::shared_ptr<WorldS
     }
     else if (isBot)
     {
-        m_Address = "127.0.0.1";
+        m_Address = "bot";
     }
 }
 
@@ -216,8 +216,14 @@ ObjectGuid::LowType WorldSession::GetGuidLow() const
 /// Send a packet to the client
 void WorldSession::SendPacket(WorldPacket const* packet)
 {
+    if (packet->GetOpcode() == NULL_OPCODE)
+    {
+        LOG_ERROR("network.opcode", "{} send NULL_OPCODE", GetPlayerInfo());
+        return;
+    }
+
     sScriptMgr->OnPlayerbotPacketSent(GetPlayer(), packet);
-    
+
     if (!m_Socket)
         return;
 
@@ -753,8 +759,8 @@ void WorldSession::LogoutPlayer(bool save)
         LOG_DEBUG("network", "SESSION: Sent SMSG_LOGOUT_COMPLETE Message");
 
         //! Since each account can only have one online character at any given time, ensure all characters for active account are marked as offline
-        CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_ACCOUNT_ONLINE);
-        stmt->SetData(0, GetAccountId());
+        CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CharacterDatabaseStatements(statementIndex));
+        stmt->SetData(0, statementParam);
         CharacterDatabase.Execute(stmt);
     }
 

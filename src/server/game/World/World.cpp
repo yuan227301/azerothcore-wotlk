@@ -67,6 +67,7 @@
 #include "ObjectMgr.h"
 #include "Opcodes.h"
 #include "OutdoorPvPMgr.h"
+#include "QueryHolder.h"
 #include "PetitionMgr.h"
 #include "Player.h"
 #include "PlayerDump.h"
@@ -2314,7 +2315,10 @@ void World::Update(uint32 diff)
         ResetGuildCap();
     }
 
-    sScriptMgr->OnPlayerbotUpdate(diff);
+    {
+        METRIC_TIMER("world_update_time", METRIC_TAG("type", "OnPlayerbotUpdate"));
+        sScriptMgr->OnPlayerbotUpdate(diff);
+    }
 
     // pussywizard: handle auctions when the timer has passed
     if (_timers[WUPDATE_AUCTIONS].Passed())
@@ -2708,7 +2712,6 @@ void World::KickAll()
     // pussywizard: kick offline sessions
     for (SessionMap::const_iterator itr = _offlineSessions.begin(); itr != _offlineSessions.end(); ++itr)
         itr->second->KickPlayer("KickAll offline sessions");
-
 #ifdef MOD_PLAYERBOTS
     sScriptMgr->OnPlayerbotLogoutBots();
 #endif
@@ -2757,6 +2760,7 @@ void World::_UpdateGameTime()
 void World::ShutdownServ(uint32 time, uint32 options, uint8 exitcode, const std::string& reason)
 {
     // ignore if server shutdown at next tick
+
     if (IsStopped())
         return;
 

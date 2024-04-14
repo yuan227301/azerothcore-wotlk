@@ -28,7 +28,6 @@ RUN mkdir -pv \
         /azerothcore/src                   \
         /azerothcore/build
 
-# RUN sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list		
 # Configure Timezone
 RUN apt-get update                                          \
     && apt-get install -y tzdata ca-certificates            \
@@ -61,7 +60,6 @@ ARG CCACHE_COMPRESSLEVEL="9"
 ARG CCACHE_COMPILERCHECK="content"
 ARG CCACHE_LOGFILE=""
 
-# RUN sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
 RUN apt-get update                                                     \
     && apt-get install -y --no-install-recommends                         \
         build-essential ccache libtool cmake-data make cmake clang    \
@@ -115,8 +113,6 @@ ARG GROUP_ID=1000
 ARG DOCKER_USER=acore
 
 ENV ACORE_COMPONENT=undefined
-
-# RUN sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
 
 # Install base dependencies for azerothcore
 RUN apt-get update && \

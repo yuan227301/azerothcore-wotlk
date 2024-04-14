@@ -2501,6 +2501,10 @@ public:
     [[nodiscard]] bool CanRestoreMana(SpellInfo const* spellInfo) const;
 
     std::string GetDebugInfo() const override;
+    void SetCannotReachTargetUnit(bool target, bool isChase);
+    [[nodiscard]] bool CanNotReachTarget() const;
+
+    bool m_cannotReachTarget;
 
     [[nodiscard]] uint32 GetOldFactionId() const { return _oldFactionId; }
 

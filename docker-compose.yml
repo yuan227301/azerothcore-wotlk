@@ -13,7 +13,7 @@ services:
     networks:
       - ac-network
     ports:
-      - ${DOCKER_DB_EXTERNAL_PORT:-3306}:3306
+      - ${DOCKER_DB_EXTERNAL_PORT:-33060}:3306
     environment:
       - MYSQL_ROOT_PASSWORD=${DOCKER_DB_ROOT_PASSWORD:-password}
     volumes:
@@ -66,6 +66,7 @@ services:
       AC_LOGIN_DATABASE_INFO: "ac-database;3306;root;${DOCKER_DB_ROOT_PASSWORD:-password};acore_auth"
       AC_WORLD_DATABASE_INFO: "ac-database;3306;root;${DOCKER_DB_ROOT_PASSWORD:-password};acore_world"
       AC_CHARACTER_DATABASE_INFO: "ac-database;3306;root;${DOCKER_DB_ROOT_PASSWORD:-password};acore_characters"
+      AC_PLAYERBOTS_DATABASE_INFO: "ac-database;3306;root;${DOCKER_DB_ROOT_PASSWORD:-password};acore_playerbots"
     ports:
       - ${DOCKER_WORLD_EXTERNAL_PORT:-8085}:8085
       - ${DOCKER_SOAP_EXTERNAL_PORT:-7878}:7878
@@ -137,7 +138,7 @@ services:
       # this is not the directory of the extracted data! It's the client folder used by the extractors
       - ${DOCKER_AC_CLIENT_FOLDER:-./var/client}:/azerothcore/env/dist/bin/Data
     # Activate with `docker compose --profile tools ...`
-    profiles: [tools]
+    # profiles: [tools]
 
   # Dev server with the ./azerothcore folder binded from the host
   # Please use Linux, WSL2 or any ext-compatible filesystem

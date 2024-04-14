@@ -55,6 +55,8 @@ CMakeLists.txt.user
 #
 /.settings/
 /.externalToolBuilders/*
+/.vs
+/out
 # exclude in all levels
 nbproject/
 .sync.ffs_db
@@ -90,5 +92,10 @@ local.properties
 #  module directly in repositoryyou can do:
 #
 #  !modules/yourmodule
+datadb/
+ac-client-data/
+env/
 #
 # ==================
+.cache
+compile_commands.json
