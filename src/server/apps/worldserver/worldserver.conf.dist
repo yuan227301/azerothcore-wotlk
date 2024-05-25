@@ -3131,6 +3131,13 @@ Instance.IgnoreRaid = 0
 Instance.ResetTimeHour = 4
 
 #
+#    Instance.CannotEnterDuringCombat
+#        Description: Should players be prevented from entering instances while in combat?
+#        Default:     0 - (Disabled)
+#                     1 - (Enabled) default
+Instance.CannotEnterDuringCombat = 1
+
+#
 #     Instance.ResetTimeRelativeTimestamp
 #        Description: Needed for displaying valid instance reset times in ingame calendar.
 #                     This timestamp should be set to a date in the past (midnight) on which

@@ -40,6 +40,7 @@
 #include "VMapFactory.h"
 #include "Vehicle.h"
 #include "Weather.h"
+#include "Config.h"
 
 union u_map_magic
 {
@@ -2910,7 +2911,8 @@ Map::EnterState InstanceMap::CannotEnter(Player* player, bool loginCheck)
 
     // cannot enter while an encounter is in progress on raids
     bool checkProgress = (IsRaid() || GetId() == 668 /*HoR*/);
-    if (checkProgress && GetInstanceScript() && GetInstanceScript()->IsEncounterInProgress())
+    bool prohibited = sConfigMgr->GetOption<bool>("Instance.CannotEnterDuringCombat", true);
+    if (prohibited && checkProgress && GetInstanceScript() && GetInstanceScript()->IsEncounterInProgress())
     {
         player->SendTransferAborted(GetId(), TRANSFER_ABORT_ZONE_IN_COMBAT);
         return CANNOT_ENTER_ZONE_IN_COMBAT;
