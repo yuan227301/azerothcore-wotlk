@@ -1350,13 +1350,16 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
     MapEntry const* mEntry = sMapStore.LookupEntry(mapid);
 
     // don't let enter battlegrounds without assigned battleground id (for example through areatrigger)...
-    if (!InBattleground() && mEntry->IsBattlegroundOrArena())
+    if (!InBattleground() && mEntry->IsBattlegroundOrArena()){
+        LOG_ERROR("entities.player", "Player {} InBattleground", GetName());
         return false;
+    }
 
     // pussywizard: arena spectator, prevent teleporting from arena to instance/etc
     if (GetMapId() != mapid && IsSpectator() && mEntry->Instanceable())
     {
         SendTransferAborted(mapid, TRANSFER_ABORT_MAP_NOT_ALLOWED);
+        LOG_ERROR("entities.player", "Player {} IsSpectator", GetName());
         return false;
     }
 

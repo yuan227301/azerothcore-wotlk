@@ -218,8 +218,10 @@ Map::EnterState MapMgr::PlayerCannotEnter(uint32 mapid, Player* player, bool log
         uint32 destInstId = sInstanceSaveMgr->PlayerGetDestinationInstanceId(player, mapid, targetDifficulty);
         if (destInstId)
             if (Map* boundMap = sMapMgr->FindMap(mapid, destInstId))
-                if (Map::EnterState denyReason = boundMap->CannotEnter(player, loginCheck))
+                if (Map::EnterState denyReason = boundMap->CannotEnter(player, loginCheck)){
+                    LOG_DEBUG("maps", "MAP: Player '{}' cannot enter instance '{}' because the instance is {}.", player->GetName(), mapName, uint32(denyReason));
                     return denyReason;
+                }
     }
 
     // players are only allowed to enter 5 instances per hour
@@ -233,12 +235,15 @@ Map::EnterState MapMgr::PlayerCannotEnter(uint32 mapid, Player* player, bool log
         if (!player->CheckInstanceCount(instaceIdToCheck))
         {
             player->SendTransferAborted(mapid, TRANSFER_ABORT_TOO_MANY_INSTANCES);
+            LOG_DEBUG("maps", "MAP: Player '{}' cannot enter instance '{}' because the instance is {}.", player->GetName(), mapName, uint32(Map::CANNOT_ENTER_TOO_MANY_INSTANCES));
             return Map::CANNOT_ENTER_TOO_MANY_INSTANCES;
         }
     }
 
     //Other requirements
-    return player->Satisfy(sObjectMgr->GetAccessRequirement(mapid, targetDifficulty), mapid, true) ? Map::CAN_ENTER : Map::CANNOT_ENTER_UNSPECIFIED_REASON;
+    bool satisfy = player->Satisfy(sObjectMgr->GetAccessRequirement(mapid, targetDifficulty), mapid, true);
+    if (!satisfy) LOG_DEBUG("maps", "MAP: Player '{}' not satisfy", player->GetName());
+    return  satisfy ? Map::CAN_ENTER : Map::CANNOT_ENTER_UNSPECIFIED_REASON;
 }
 
 void MapMgr::Update(uint32 diff)

@@ -6744,6 +6744,7 @@ bool Player::Satisfy(DungeonProgressionRequirements const* ar, uint32 target_map
         if (DisableMgr::IsDisabledFor(DISABLE_TYPE_MAP, target_map, this))
         {
             GetSession()->SendAreaTriggerMessage("%s", GetSession()->GetAcoreString(LANG_INSTANCE_CLOSED));
+            LOG_DEBUG("maps", "MAP: '{}' not satisfy.", target_map);
             return false;
         }
 
