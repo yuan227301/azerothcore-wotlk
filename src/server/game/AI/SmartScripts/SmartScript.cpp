@@ -424,10 +424,10 @@ void SmartScript::ProcessAction(SmartScriptHolder& e, Unit* unit, uint32 var0, u
                     {
                         if (CreatureTemplate const* ci = sObjectMgr->GetCreatureTemplate(e.action.morphOrMount.creature))
                         {
-                            uint32 displayId = ObjectMgr::ChooseDisplayId(ci);
-                            target->ToCreature()->SetDisplayId(displayId);
+                            CreatureModel const* model = ObjectMgr::ChooseDisplayId(ci);
+                            target->ToCreature()->SetDisplayId(model->CreatureDisplayID, model->DisplayScale);
                             LOG_DEBUG("scripts.ai", "SmartScript::ProcessAction:: SMART_ACTION_MORPH_TO_ENTRY_OR_MODEL: Creature entry {}, GuidLow {} set displayid to {}",
-                                      target->GetEntry(), target->GetGUID().ToString(), displayId);
+                                      target->GetEntry(), target->GetGUID().ToString(), model->CreatureDisplayID);
                         }
                     }
                         //if no param1, then use value from param2 (modelId)
@@ -1272,22 +1272,29 @@ void SmartScript::ProcessAction(SmartScriptHolder& e, Unit* unit, uint32 var0, u
         {
             for (WorldObject* target : targets)
             {
-                Milliseconds despawnDelay(e.action.forceDespawn.delay);
+                if (e.action.forceDespawn.removeObjectFromWorld)
+                {
+                    if (e.action.forceDespawn.delay || e.action.forceDespawn.forceRespawnTimer)
+                        LOG_ERROR("sql.sql", "SmartScript: SMART_ACTION_FORCE_DESPAWN has removeObjectFromWorld set. delay and forceRespawnTimer ignored.");
 
-                // Wait at least one world update tick before despawn, so it doesn't break linked actions.
-                if (despawnDelay <= 0ms)
-                {
-                    despawnDelay = 1ms;
+                    if (Creature* creature = target->ToCreature())
+                        creature->AddObjectToRemoveList();
+                    else if (GameObject* go = target->ToGameObject())
+                        go->AddObjectToRemoveList();
                 }
+                else
+                {
+                    Milliseconds despawnDelay(e.action.forceDespawn.delay);
 
-                Seconds forceRespawnTimer(e.action.forceDespawn.forceRespawnTimer);
-                if (Creature* creature = target->ToCreature())
-                {
-                    creature->DespawnOrUnsummon(despawnDelay, forceRespawnTimer);
-                }
-                else if (GameObject* go = target->ToGameObject())
-                {
-                    go->DespawnOrUnsummon(despawnDelay, forceRespawnTimer);
+                    // Wait at least one world update tick before despawn, so it doesn't break linked actions.
+                    if (despawnDelay <= 0ms)
+                        despawnDelay = 1ms;
+
+                    Seconds forceRespawnTimer(e.action.forceDespawn.forceRespawnTimer);
+                    if (Creature* creature = target->ToCreature())
+                        creature->DespawnOrUnsummon(despawnDelay, forceRespawnTimer);
+                    else if (GameObject* go = target->ToGameObject())
+                        go->DespawnOrUnsummon(despawnDelay, forceRespawnTimer);
                 }
             }
 
@@ -1316,7 +1323,7 @@ void SmartScript::ProcessAction(SmartScriptHolder& e, Unit* unit, uint32 var0, u
                     if (e.action.morphOrMount.creature > 0)
                     {
                         if (CreatureTemplate const* cInfo = sObjectMgr->GetCreatureTemplate(e.action.morphOrMount.creature))
-                            target->ToUnit()->Mount(ObjectMgr::ChooseDisplayId(cInfo));
+                            target->ToUnit()->Mount(ObjectMgr::ChooseDisplayId(cInfo)->CreatureDisplayID);
                     }
                     else
                         target->ToUnit()->Mount(e.action.morphOrMount.model);
